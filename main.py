@@ -6,7 +6,7 @@ import json
 
 BROKER_ADDRESS = "demo.thingsboard.io"
 PORT = 1883 # default port of mqtt protocol
-THINGS_BOARD_ACCESS_TOKEN = ""
+THINGS_BOARD_ACCESS_TOKEN = "5pM1mSyz1RKlU7FkHWJC"
 
 def subscribed(client, userdata, mid, granted_qos):
     print("Subscribed...")
