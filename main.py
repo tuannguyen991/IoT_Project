@@ -49,10 +49,13 @@ humiDefault = 50   # default value of humidity
 tempStep = 5
 humiStep = 30
 
+longitude = 106.6297
+latitude = 10.8231 
+
 counter = 0
 while True:
     temp = getRandom(tempDefault, tempStep)
     humi = getRandom(humiDefault, humiStep)
-    collect_data = {'temperature': temp, 'humidity': humi}
+    collect_data = {'temperature': temp, 'humidity': humi, 'longitude': longitude, 'latitude': latitude}
     client.publish('v1/devices/me/telemetry', json.dumps(collect_data), 1)
     time.sleep(10)
