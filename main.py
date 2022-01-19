@@ -3,6 +3,7 @@ print("IoT Gateway")
 import paho.mqtt.client as mqttclient
 import time
 import json
+import random
 
 BROKER_ADDRESS = "demo.thingsboard.io"
 PORT = 1883 # default port of mqtt protocol
@@ -29,6 +30,9 @@ def connected(client, usedata, flags, rc):
     else:
         print("Connection is failed")
 
+def getRandom(default, step):
+    return default + random.uniform(-1, 1) * step
+
 client = mqttclient.Client("Gateway_Thingsboard")
 client.username_pw_set(THINGS_BOARD_ACCESS_TOKEN)
 
@@ -39,12 +43,16 @@ client.loop_start()
 client.on_subscribe = subscribed
 client.on_message = recv_message
 
-temp = 30
-humi = 50
+tempDefault = 25   # default value of temperature
+humiDefault = 50   # default value of humidity
+
+tempStep = 5
+humiStep = 30
+
 counter = 0
 while True:
+    temp = getRandom(tempDefault, tempStep)
+    humi = getRandom(humiDefault, humiStep)
     collect_data = {'temperature': temp, 'humidity': humi}
-    temp += 1
-    humi += 1
     client.publish('v1/devices/me/telemetry', json.dumps(collect_data), 1)
     time.sleep(10)
