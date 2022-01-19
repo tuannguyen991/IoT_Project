@@ -5,6 +5,10 @@ import time
 import json
 import random
 
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import os
+
 BROKER_ADDRESS = "demo.thingsboard.io"
 PORT = 1883 # default port of mqtt protocol
 THINGS_BOARD_ACCESS_TOKEN = "5pM1mSyz1RKlU7FkHWJC"
@@ -33,6 +37,38 @@ def connected(client, usedata, flags, rc):
 def getRandom(default, step):
     return default + random.uniform(-1, 1) * step
 
+def getLocation():
+    driver = webdriver.Chrome()
+    driver.get("https://www.google.com/maps")
+
+    string = '''
+        function getLocation(callback) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var myjson = {"latitude":position.coords.latitude, "longitude":position.coords.longitude};
+                    var stringJson = JSON.stringify(myjson);
+                    callback(stringJson);
+                });
+            }
+        }
+        
+        getLocation(function(callback) {
+            const para = document.createElement("p");
+            para.innerHTML = callback;
+            para.id = "location";
+            document.body.appendChild(para);
+        })
+    '''
+
+    driver.execute_script(string)
+    time.sleep(2)
+    res = driver.find_element(By.ID, "location")
+    loc = res.text
+    locDict = json.loads(loc)
+
+    os.system("pkill chrome")
+    return locDict["latitude"], locDict["longitude"]
+
 client = mqttclient.Client("Gateway_Thingsboard")
 client.username_pw_set(THINGS_BOARD_ACCESS_TOKEN)
 
@@ -49,13 +85,14 @@ humiDefault = 50   # default value of humidity
 tempStep = 5
 humiStep = 30
 
-longitude = 106.6297
 latitude = 10.8231 
+longitude = 106.6297
 
 counter = 0
 while True:
     temp = getRandom(tempDefault, tempStep)
     humi = getRandom(humiDefault, humiStep)
-    collect_data = {'temperature': temp, 'humidity': humi, 'longitude': longitude, 'latitude': latitude}
+    latitude, longitude = getLocation()
+    collect_data = {'temperature': temp, 'humidity': humi, 'latitude': latitude, 'longitude': longitude}
     client.publish('v1/devices/me/telemetry', json.dumps(collect_data), 1)
     time.sleep(10)
