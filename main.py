@@ -41,14 +41,14 @@ def processData(data):
     splitData = data.split(":")
     print(splitData)
     #TODO: Add your source code to publish data to the server
-    if len ( splitData ) != 3:
-        print ('error at line 25', data )
+    if len (splitData) != 3:
+        print ('error when process data', data )
         return
     
     if splitData [1] == "TEMP":
-        client . publish ("v1/devices/me/telemetry", json . dumps ({'temperature': splitData [2]}) , 1)
-    elif splitData [1] == " LIGHT ":
-        client . publish ("v1/devices/me/telemetry", json . dumps ({ 'light': splitData [2]}) , 1)
+        client.publish ("v1/devices/me/telemetry", json.dumps({'temperature': splitData[2]}), 1)
+    elif splitData [1] == "LIGHT":
+        client.publish ("v1/devices/me/telemetry", json.dumps({'light': splitData[2]}), 1)
 
 def readSerial():
     bytesToRead = ser.inWaiting()
