@@ -1,71 +1,115 @@
+print("IoT Gateway")
 import paho.mqtt.client as mqttclient
 import time
 import json
-import math
-import random
+import serial.tools.list_ports
 
-print("Hello ThingBoard")
-
-TOPICS = ["/bkiot/1915775/status","/bkiot/1915775/led","/bkiot/1915775/pump"]
-BROKER_ADDRESS = "mqttserver.tk"
+BROKER_ADDRESS = "demo.thingsboard.io"
 PORT = 1883
-USERNAME = "bkiot"
-PASSWORD = "12345678"
+mess = ""
 
-collect_data = {"temperature" : 0, "moisture" : 0, "min_temperature" : 15, "max_temperature" : 60, "device_access" : 0}
-led_data = {"device" : "LED", "status" : "OFF"}
-pump_data = {"device" : "PUMP", "status" : "OFF"}
+#TODO: Add your token and your comport
+#Please check the comport in the device manager
+THINGS_BOARD_ACCESS_TOKEN = "5pM1mSyz1RKlU7FkHWJC"
+# THINGS_BOARD_ACCESS_TOKEN = "fROzDdUblwadpVOMwlh0"
+
+def getPort():
+    ports = serial.tools.list_ports.comports()
+    for i in range(len(ports)):
+        print(str(ports[i]))
+    N = len(ports)
+    commPort = "None"
+    for i in range(0, N):
+        port = ports[i]
+        strPort = str(port)
+        print(strPort)
+        if "BBC micro:bit CMSIS-DAP" in strPort:
+            splitPort = strPort.split(" ")
+            commPort = splitPort[0]
+    return commPort
+    # return "COM5"
+
+bbc_port = getPort()
+
+
+if len(bbc_port) > 0:
+    ser = serial.Serial(port=bbc_port, baudrate=115200)
+
+def processData(data):
+    data = data.replace("!", "")
+    data = data.replace("#", "")
+    splitData = data.split(":")
+    print(splitData)
+    #TODO: Add your source code to publish data to the server
+    if len ( splitData ) != 3:
+        print ('error at line 25', data )
+        return
+    
+    if splitData [1] == "TEMP":
+        client . publish ("v1/devices/me/telemetry", json . dumps ({'temperature': splitData [2]}) , 1)
+    elif splitData [1] == " LIGHT ":
+        client . publish ("v1/devices/me/telemetry", json . dumps ({ 'light': splitData [2]}) , 1)
+
+def readSerial():
+    bytesToRead = ser.inWaiting()
+    if (bytesToRead > 0):
+        global mess
+        mess = mess + ser.read(bytesToRead).decode("UTF-8")
+        while ("#" in mess) and ("!" in mess):
+            start = mess.find("!")
+            end = mess.find("#")
+            processData(mess[start:end + 1])
+            if (end == len(mess)):
+                mess = ""
+            else:
+                mess = mess[end+1:]
+
 
 def subscribed(client, userdata, mid, granted_qos):
     print("Subscribed...")
 
-
 def recv_message(client, userdata, message):
     print("Received: ", message.payload.decode("utf-8"))
-    if message.topic == TOPICS[0]:
-        jsonobj = json.loads(message.payload)
-        try:
-            if jsonobj["device_access"] == 1:
-                client.publish(TOPICS[0], json.dumps(collect_data), 1)
-                print("line 30 publish:")
-                client.publish(TOPICS[1], json.dumps(led_data), 1)
-                print("line 32 publish:")
-                client.publish(TOPICS[2], json.dumps(pump_data), 1)
-        except:
-            pass
-        collect_data["max_temperature"] = jsonobj["max_temperature"]
-        collect_data["min_temperature"] = jsonobj["min_temperature"]
-    if message.topic == TOPICS[1]:
-        jsonobj = json.loads(message.payload)
-        led_data["status"] = jsonobj["status"]
-    if message.topic == TOPICS[2]:
-        jsonobj = json.loads(message.payload)
-        pump_data["status"] = jsonobj["status"]
-    # led_data = {}
-    # pump_data = {}
-    # try:
-    #     jsonobj = json.loads(message.payload)
-    #     if jsonobj['method'] == "setLED":
-    #         led_data['valueLED'] = jsonobj['params']
-    #     client.publish('v1/devices/me/attributes', json.dumps(led_data), 1)
-    #     if jsonobj['method'] == "setPUMP":
-    #         pump_data['valuePUMP'] = jsonobj['params']
-    #     client.publish('v1/devices/me/attributes', json.dumps(pump_data), 1)
-    # except:
-    #     pass
+    led_data = {}
+    fan_data = {}
+    cmd = -1
+    #TODO: Update the cmd to control 2 devices
+    #0 : led off , 1 : led on , 2 : pump off , 3 : pump on
 
+    try:
+        jsonobj = json.loads(message.payload)
+        if jsonobj['method'] == "setled":
+            led_data['valueled'] = jsonobj['params']
+            
+            if (jsonobj['params']):
+                cmd = 1
+            else:
+                cmd = 0
+            client.publish('v1/devices/me/attributes', json.dumps(led_data), 1)
+        if jsonobj['method'] == "setfan":
+            fan_data['valuefan'] = jsonobj['params']
+
+            if (jsonobj['params']):
+                cmd = 3
+            else:
+                cmd = 2
+            client.publish('v1/devices/me/attributes', json.dumps(fan_data), 1)
+    except:
+        pass
+
+    if len(bbc_port) > 0:
+        ser.write((str(cmd) + "#").encode())
 
 def connected(client, usedata, flags, rc):
     if rc == 0:
         print("Thingsboard connected successfully!!")
-        for topic in TOPICS:
-            client.subscribe(topic)
+        client.subscribe("v1/devices/me/rpc/request/+")
     else:
         print("Connection is failed")
 
 
 client = mqttclient.Client("Gateway_Thingsboard")
-client.username_pw_set(USERNAME,PASSWORD)
+client.username_pw_set(THINGS_BOARD_ACCESS_TOKEN)
 
 client.on_connect = connected
 client.connect(BROKER_ADDRESS, 1883)
@@ -75,9 +119,9 @@ client.on_subscribe = subscribed
 client.on_message = recv_message
 
 
-
 while True:
-    collect_data["temperature"] = random.randint(0,100)
-    collect_data["moisture"] = random.randint(0,100)
-    client.publish(TOPICS[0], json.dumps(collect_data), 1)
-    time.sleep(5)
+
+    if len(bbc_port) >  0:
+        readSerial()
+
+    time.sleep(1)
