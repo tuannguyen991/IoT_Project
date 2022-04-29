@@ -1,3 +1,4 @@
+# sudo chmod a+rw /dev/ttyACM0
 print("IoT Gateway")
 import paho.mqtt.client as mqttclient
 import time
