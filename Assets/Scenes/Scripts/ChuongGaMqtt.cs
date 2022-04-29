@@ -14,27 +14,9 @@ namespace ChuongGa
 {
     public class Status_Data
     {
-        //public string project_id { get; set; }
-        //public string project_name { get; set; }
-        //public string station_id { get; set; }
-        //public string station_name { get; set; }
-        //public string longitude { get; set; }
-        //public string latitude { get; set; }
-        //public string volt_battery { get; set; }
-        //public string volt_solar { get; set; }
-        //public List<data_ss> data_ss { get; set; }
-        //public string device_status { get; set; }
         public float temperature { get; set; }
         public float humidity { get; set; }
         public int device_status { get; set; }
-        //public Status_Data(float temp, float humidity, float min_temp, float max_temp, int access)
-        //{
-        //    this.temperature = temp;
-        //    this.humidity = humidity;
-        //    this.min_temperature = min_temp;
-        //    this.max_temperature = max_temp;
-        //    this.device_status = access;
-        //}
     }
 
     public class data_ss
@@ -95,8 +77,6 @@ namespace ChuongGa
 
         public async void  PublishLed(bool isOn)
         {
-            //_config_data = new Config_Data();
-            //GetComponent<ChuongGaManager>().Update_Config_Value(_config_data);
             _led_data = new Led_Data("LED", isOn ? "ON" : "OFF");
             string msg_led = JsonConvert.SerializeObject(_led_data);
             client.Publish(topics[1], System.Text.Encoding.UTF8.GetBytes(msg_led), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
@@ -185,37 +165,7 @@ namespace ChuongGa
             {
                 Debug.Log(GetComponent<ChuongGaManager>().connected);
                 GetComponent<ChuongGaManager>()._notification.text = "Connect Fail";
-                //GetComponent<ChuongGaManager>().FadeIn(GetComponent<ChuongGaManager>()._notification, 1f);
             }
-
-            //if (addressInputField.text != "")
-            //{
-            //    this.brokerAddress = addressInputField.text;
-            //}
-            //else
-            //{
-            //    this.brokerAddress = "mqttserver.tk";
-            //}
-
-            //if (userInputField.text != "")
-            //{
-            //    this.mqttUserName = userInputField.text;
-            //}
-            //else
-            //{
-            //    this.mqttUserName = "bkiot";
-            //}
-
-            //if (pwdInputField.text != "")
-            //{
-            //    this.mqttPassword = pwdInputField.text;
-            //}
-            //else
-            //{
-            //    this.mqttPassword = "12345678";
-            //}
-            //this.brokerPort = 1883;
-            //base.Connect();
         }
 
 
@@ -229,7 +179,6 @@ namespace ChuongGa
         {
             string msg = System.Text.Encoding.UTF8.GetString(message);
             Debug.Log("Received: " + msg);
-            //StoreMessage(msg);
             if (topic == topics[0])
                 ProcessMessageStatus(msg);
 
@@ -265,6 +214,5 @@ namespace ChuongGa
         {
             Disconnect();
         }
-
     }
 }

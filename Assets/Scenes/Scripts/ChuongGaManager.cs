@@ -42,21 +42,6 @@ namespace ChuongGa
         private CanvasGroup status_led_off;
 
         private Button _btn_config;
-        /// <summary>
-        /// Layer 2 elements
-        /// </summary>
-        /*[SerializeField]
-        private CanvasGroup _canvasLayer2;
-        [SerializeField]
-        private InputField _input_min_tempe;
-        [SerializeField]
-        private InputField _input_max_tempe;
-        [SerializeField]
-        private Toggle ModeAuto;*/
-
-        /// <summary>
-        /// Layer 0 elements
-        /// </summary>
         [SerializeField]
         private CanvasGroup _canvasLayer0;
         [SerializeField]
@@ -71,13 +56,6 @@ namespace ChuongGa
         public Text _notification;
         [SerializeField]
         public CanvasGroup _notification_status;
-
-
-        /// <summary> 
-        /// General elements
-        /// </summary>
-        //[SerializeField]
-        //private GameObject Btn_Quit;
 
         private Tween twenFade;
 
@@ -160,9 +138,6 @@ namespace ChuongGa
                 _canvas.blocksRaycasts = false;
             });
         }
-
-
-
 
         IEnumerator _IESwitchLayer()
         {
